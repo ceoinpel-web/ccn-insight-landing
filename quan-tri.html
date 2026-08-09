@@ -167,6 +167,29 @@
       <div class="field"><label>Hạn chót</label><input type="date" id="smHanChot"></div>
     </div>
     <div class="field"><label><input type="checkbox" id="smCongKhai" style="width:auto"> Công khai trong sảnh khảo sát</label></div>
+    <div class="grid2">
+      <div class="field"><label>Chế độ truy cập</label>
+        <select id="smAccessMode">
+          <option value="mo">Mở tự do (ai cũng vào được)</option>
+          <option value="moi">Chỉ qua mời (token 1 lần)</option>
+        </select>
+        <span class="note">"Mở tự do": ai cũng trả lời được, phiếu không mời gắn nhãn khách khi xem kết quả. "Chỉ qua mời": bắt buộc dùng link mời, không mời không vào được.</span>
+      </div>
+      <div class="field"><label>Chính sách nộp phiếu</label>
+        <select id="smResubmitPolicy">
+          <option value="cho_sua_luu_lich_su">Cho nộp lại (lưu lịch sử)</option>
+          <option value="khoa_1_lan">Khoá sau khi nộp 1 lần</option>
+        </select>
+      </div>
+    </div>
+    <div class="field hidden" id="smInviteBox">
+      <label>Mời chuyên gia tham gia khảo sát này</label>
+      <div class="row">
+        <div style="flex:1;min-width:180px"><input type="email" id="smInviteEmail" placeholder="email@vidu.com"></div>
+        <button class="btn-gold btn-sm" id="smInviteSend">Gửi lời mời</button>
+      </div>
+      <div id="smInviteMsg"></div>
+    </div>
     <div class="row" style="justify-content:space-between;margin-top:14px">
       <div>
         <button class="btn-ghost btn-sm" id="smOpenQuestions">Sửa câu hỏi</button>
@@ -198,6 +221,8 @@
 <div class="modal-bg hidden" id="rModal">
   <div class="modal" style="max-width:900px">
     <h3>Kết quả: <span id="rTitle"></span></h3>
+    <div class="field hidden" id="rFilterBox"><label><input type="checkbox" id="rOnlyOfficial" style="width:auto"> Chỉ tính phiếu chính thức (bỏ phiếu khách/tự do)</label></div>
+    <p class="muted" id="rCount"></p>
     <div style="overflow:auto;max-height:60vh"><table id="rTable"><thead></thead><tbody></tbody></table></div>
     <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn-ghost" id="rCancel">Đóng</button></div>
   </div>
@@ -329,10 +354,15 @@ function openSessionModal(sessionId){
   qs('smNgayMo').value = s && s.ngay_mo ? String(s.ngay_mo).slice(0,10) : '';
   qs('smHanChot').value = s && s.han_chot ? String(s.han_chot).slice(0,10) : '';
   qs('smCongKhai').checked = s ? !!s.cong_khai : false;
-  [qs('smTen'),qs('smMoTa'),qs('smBo'),qs('smTrangThai'),qs('smNgayMo'),qs('smHanChot'),qs('smCongKhai'),qs('smSave')].forEach(el=>{ el.disabled = !canEdit; });
+  qs('smAccessMode').value = s ? (s.che_do_truy_cap === 'moi' ? 'moi' : 'mo') : 'mo';
+  qs('smResubmitPolicy').value = s ? (s.chinh_sach_nop_lai === 'khoa_1_lan' ? 'khoa_1_lan' : 'cho_sua_luu_lich_su') : 'cho_sua_luu_lich_su';
+  [qs('smTen'),qs('smMoTa'),qs('smBo'),qs('smTrangThai'),qs('smNgayMo'),qs('smHanChot'),qs('smCongKhai'),qs('smAccessMode'),qs('smResubmitPolicy'),qs('smSave')].forEach(el=>{ el.disabled = !canEdit; });
   qs('smOpenQuestions').classList.toggle('hidden', !s);
   qs('smOpenResults').classList.toggle('hidden', !s);
   qs('smDelete').classList.toggle('hidden', !s || !canEdit);
+  qs('smInviteBox').classList.toggle('hidden', !s || !canEdit);
+  qs('smInviteEmail').value = '';
+  qs('smInviteMsg').innerHTML = '';
   qs('sessionModal').classList.remove('hidden');
 }
 qs('btnNewSession').addEventListener('click', ()=>openSessionModal(null));
@@ -347,7 +377,9 @@ qs('smSave').addEventListener('click', ()=>{
     trang_thai: qs('smTrangThai').value,
     ngay_mo: qs('smNgayMo').value,
     han_chot: qs('smHanChot').value,
-    cong_khai: qs('smCongKhai').checked
+    cong_khai: qs('smCongKhai').checked,
+    che_do_truy_cap: qs('smAccessMode').value,
+    chinh_sach_nop_lai: qs('smResubmitPolicy').value
   };
   if (!s.session_id){ showModalMsg('Cần nhập mã khảo sát.', false); return; }
   if (!s.ten_khao_sat){ showModalMsg('Cần nhập tên khảo sát.', false); return; }
@@ -355,6 +387,23 @@ qs('smSave').addEventListener('click', ()=>{
     if (res.ok){ showMsg('Đã lưu khảo sát.', true); qs('sessionModal').classList.add('hidden'); loadSessions(); }
     else showModalMsg('Lỗi: ' + (res.error||''), false);
   }).catch(()=>{ showModalMsg('Không thể kết nối máy chủ. Vui lòng thử lại.', false); });
+});
+
+qs('smInviteSend').addEventListener('click', ()=>{
+  const email = qs('smInviteEmail').value.trim();
+  if (!email){ qs('smInviteMsg').innerHTML = '<div class="msg msg-err">Cần nhập email.</div>'; return; }
+  if (!currentSessionId){ qs('smInviteMsg').innerHTML = '<div class="msg msg-err">Cần lưu khảo sát trước khi mời.</div>'; return; }
+  const btn = qs('smInviteSend');
+  btn.disabled = true;
+  post({action:'invite_expert', session_id: currentSessionId, email: email}).then(res=>{
+    btn.disabled = false;
+    if (res.ok){
+      qs('smInviteMsg').innerHTML = '<div class="msg msg-ok">Đã tạo mã ' + res.expertCode + (res.emailSent ? ' và gửi email mời tới ' + email + '.' : ' nhưng gửi email thất bại, vui lòng gửi mã cho chuyên gia theo cách khác.') + '</div>';
+      qs('smInviteEmail').value = '';
+    } else {
+      qs('smInviteMsg').innerHTML = '<div class="msg msg-err">Lỗi: ' + (res.error||'') + '</div>';
+    }
+  }).catch(()=>{ btn.disabled = false; qs('smInviteMsg').innerHTML = '<div class="msg msg-err">Không thể kết nối máy chủ.</div>'; });
 });
 
 qs('smOpenQuestions').addEventListener('click', ()=>{
@@ -417,18 +466,32 @@ qs('qSave').addEventListener('click', ()=>{
   });
 });
 
+let rHeaders = [], rRows = [], rNguonIdx = -1;
+function renderResultsTable(){
+  const onlyOfficial = qs('rOnlyOfficial').checked;
+  const rows = (rNguonIdx === -1 || !onlyOfficial) ? rRows : rRows.filter(r => r[rNguonIdx] !== 'khach');
+  const thead = qs('rTable').querySelector('thead');
+  const tbody = qs('rTable').querySelector('tbody');
+  thead.innerHTML = '<tr>' + rHeaders.map(h=>'<th>'+h+'</th>').join('') + '</tr>';
+  tbody.innerHTML = rows.map(r=>'<tr>'+r.map(c=>'<td>'+(c==null?'':c)+'</td>').join('')+'</tr>').join('') || '<tr><td class="muted">Chưa có phản hồi nào.</td></tr>';
+  const khachCount = rNguonIdx === -1 ? 0 : rRows.filter(r => r[rNguonIdx] === 'khach').length;
+  qs('rCount').textContent = 'Tổng: ' + rRows.length + ' phiếu' + (rNguonIdx !== -1 ? (' (trong đó ' + khachCount + ' phiếu khách/tự do)') : '') + (onlyOfficial ? ' — đang chỉ hiện phiếu chính thức' : '');
+}
 qs('smOpenResults').addEventListener('click', ()=>{
   if (!currentSessionId) return;
   api('admin_results', {ks: currentSessionId}).then(res=>{
     if (!res.ok){ showModalMsg('Không có quyền xem kết quả.', false); return; }
     qs('rTitle').textContent = currentSessionId;
-    const thead = qs('rTable').querySelector('thead');
-    const tbody = qs('rTable').querySelector('tbody');
-    thead.innerHTML = '<tr>' + (res.headers||[]).map(h=>'<th>'+h+'</th>').join('') + '</tr>';
-    tbody.innerHTML = (res.rows||[]).map(r=>'<tr>'+r.map(c=>'<td>'+(c==null?'':c)+'</td>').join('')+'</tr>').join('') || '<tr><td class="muted">Chưa có phản hồi nào.</td></tr>';
+    rHeaders = res.headers || [];
+    rRows = res.rows || [];
+    rNguonIdx = rHeaders.indexOf('nguon');
+    qs('rFilterBox').classList.toggle('hidden', rNguonIdx === -1);
+    qs('rOnlyOfficial').checked = false;
+    renderResultsTable();
     qs('rModal').classList.remove('hidden');
   });
 });
+qs('rOnlyOfficial').addEventListener('change', renderResultsTable);
 qs('rCancel').addEventListener('click', ()=>qs('rModal').classList.add('hidden'));
 
 function loadAccessRequests(){
