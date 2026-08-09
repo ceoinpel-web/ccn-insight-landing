@@ -27,6 +27,8 @@
     line-height:1.55;
   }
   .wrap{max-width:720px;margin:0 auto;padding:24px 16px 64px;}
+  .home-link{display:inline-block;margin-bottom:14px;font-size:13px;color:var(--muted);text-decoration:none;}
+  .home-link:hover{color:var(--navy);}
   .masthead{margin-bottom:18px;}
   .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--gold);background:#fbf3e6;border:1px solid #ecd9b6;border-radius:999px;padding:4px 12px;margin-bottom:10px;}
   h1{font-size:22px;margin:0 0 6px;color:var(--navy-dark);}
@@ -98,6 +100,8 @@
 </head>
 <body>
 <div class="wrap" id="wrapRoot">
+
+  <a href="index.html" class="home-link">← Trang chủ</a>
 
   <div class="masthead">
     <span class="tag">KHẢO SÁT PHỤC VỤ NGHIÊN CỨU LUẬN ÁN TIẾN SĨ</span>
@@ -240,6 +244,8 @@ const params = new URLSearchParams(window.location.search);
 const KS = params.get('ks') || '';
 const MA = params.get('ma') || '';
 
+try { localStorage.setItem('ccn_insight_last_page', JSON.stringify({url: location.href, label: document.title})); } catch(e){}
+
 let SESSION = null;
 let QUESTIONS = [];
 let LIKERT_Q = [];
@@ -250,6 +256,7 @@ const totalSteps = 5;
 
 function showMessagePage(title, message){
   document.getElementById('wrapRoot').innerHTML =
+    '<a href="index.html" class="home-link">← Trang chủ</a>' +
     '<div class="msg-page"><h1>' + title + '</h1><p>' + message + '</p>' +
     '<p><a href="sanh.html">← Quay lại sảnh khảo sát</a></p></div>';
 }
