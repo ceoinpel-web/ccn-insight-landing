@@ -62,7 +62,7 @@ const NCS = params.get('ncs') || '';
 
 if (NCS){
   document.getElementById('adminLink').innerHTML =
-    '<a href="' + API_BASE + '?ncs=' + encodeURIComponent(NCS) + '" target="_blank" rel="noopener">Quản trị (NCS) — mở trên máy tính →</a>';
+    '<a href="quan-tri.html?ncs=' + encodeURIComponent(NCS) + '" target="_blank" rel="noopener">Quản trị (NCS/Admin) →</a>';
 }
 
 fetch(API_BASE + '?api=sessions' + (MA ? '&ma=' + encodeURIComponent(MA) : ''))
