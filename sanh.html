@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chọn khảo sát | CCN Insight</title>
+<style>
+  :root{
+    --navy:#1f3864;
+    --navy-dark:#14294a;
+    --gold:#b8892b;
+    --bg:#f4f6f9;
+    --card:#ffffff;
+    --text:#26313f;
+    --muted:#697487;
+    --border:#e2e6ee;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Segoe UI","Inter",-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.55;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:28px 16px 64px;}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--gold);background:#fbf3e6;border:1px solid #ecd9b6;border-radius:999px;padding:4px 12px;margin-bottom:10px;}
+  h1{font-size:22px;margin:0 0 6px;color:var(--navy-dark);}
+  .sub{color:var(--muted);margin:0 0 24px;font-size:14.5px;}
+  .greeting{background:#eef2f8;border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:14px;margin-bottom:20px;display:none;}
+  .card-list{display:flex;flex-direction:column;gap:14px;}
+  .session-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;text-decoration:none;color:inherit;display:block;transition:box-shadow .15s ease, border-color .15s ease;}
+  .session-card:hover{border-color:var(--navy);box-shadow:0 4px 14px rgba(31,56,100,.08);}
+  .session-card h2{font-size:16px;margin:0 0 6px;color:var(--navy-dark);}
+  .session-card p{margin:0 0 8px;font-size:13.5px;color:var(--muted);}
+  .session-card .meta{font-size:12px;color:var(--gold);font-weight:600;}
+  .empty-state{background:var(--card);border:1px dashed var(--border);border-radius:var(--radius);padding:30px 20px;text-align:center;color:var(--muted);font-size:14px;}
+  .footer-links{margin-top:32px;text-align:center;font-size:12.5px;color:var(--muted);}
+  .footer-links a{color:var(--navy);text-decoration:none;}
+  .loading{color:var(--muted);font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="tag">CCN INSIGHT</span>
+  <h1>Chọn khảo sát</h1>
+  <p class="sub">Danh sách khảo sát chuyên gia đang mở để thu thập ý kiến phục vụ nghiên cứu.</p>
+
+  <div class="greeting" id="greetingBox"></div>
+
+  <div id="listRoot"><p class="loading">Đang tải danh sách khảo sát…</p></div>
+
+  <div class="footer-links" id="adminLink"></div>
+</div>
+
+<script>
+const API_BASE = 'https://script.google.com/macros/s/AKfycbwu_igXxNoxGD6HqpTFumf64kVojwAcM9jLBZMU1XihsYMJsLB88-a6dA7Lyl0HEkSPRg/exec';
+const params = new URLSearchParams(window.location.search);
+const MA = params.get('ma') || '';
+const NCS = params.get('ncs') || '';
+
+if (NCS){
+  document.getElementById('adminLink').innerHTML =
+    '<a href="' + API_BASE + '?ncs=' + encodeURIComponent(NCS) + '" target="_blank" rel="noopener">Quản trị (NCS) — mở trên máy tính →</a>';
+}
+
+fetch(API_BASE + '?api=sessions' + (MA ? '&ma=' + encodeURIComponent(MA) : ''))
+  .then(r => r.json())
+  .then(data => {
+    const root = document.getElementById('listRoot');
+    if (!data.ok){
+      root.innerHTML = '<div class="empty-state">Không thể tải danh sách khảo sát. Vui lòng thử lại sau.</div>';
+      return;
+    }
+    if (MA){
+      document.getElementById('greetingBox').style.display = 'block';
+      document.getElementById('greetingBox').textContent = 'Xin chào! Mã chuyên gia của Anh/Chị: ' + MA + '. Vui lòng chọn khảo sát bên dưới.';
+    }
+    if (!data.sessions || data.sessions.length === 0){
+      root.innerHTML = '<div class="empty-state">Hiện chưa có khảo sát nào đang mở. Vui lòng quay lại sau.</div>';
+      return;
+    }
+    root.innerHTML = '<div class="card-list">' +
+      data.sessions.map(s => {
+        const href = 'khao-sat.html?ks=' + encodeURIComponent(s.sessionId) + (MA ? '&ma=' + encodeURIComponent(MA) : '');
+        return '<a class="session-card" href="' + href + '">' +
+          '<h2>' + s.title + '</h2>' +
+          '<p>' + (s.desc || '') + '</p>' +
+          (s.hanChot ? '<div class="meta">Hạn phản hồi: ' + s.hanChot + '</div>' : '') +
+          '</a>';
+      }).join('') +
+      '</div>';
+  })
+  .catch(() => {
+    document.getElementById('listRoot').innerHTML = '<div class="empty-state">Đã xảy ra lỗi khi tải danh sách khảo sát. Vui lòng kiểm tra kết nối mạng và thử lại.</div>';
+  });
+</script>
+</body>
+</html>

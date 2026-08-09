@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khảo sát chuyên gia | CCN Insight</title>
+<style>
+  :root{
+    --navy:#1f3864;
+    --navy-dark:#14294a;
+    --gold:#b8892b;
+    --bg:#f4f6f9;
+    --card:#ffffff;
+    --text:#26313f;
+    --muted:#697487;
+    --border:#e2e6ee;
+    --good:#2e7d5b;
+    --bad:#b3413b;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Segoe UI","Inter",-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.55;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:24px 16px 64px;}
+  .masthead{margin-bottom:18px;}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--gold);background:#fbf3e6;border:1px solid #ecd9b6;border-radius:999px;padding:4px 12px;margin-bottom:10px;}
+  h1{font-size:22px;margin:0 0 6px;color:var(--navy-dark);}
+  .sub{color:var(--muted);margin:0 0 14px;font-size:14.5px;}
+  .identity-grid{display:grid;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:13.5px;}
+  .identity-grid div b{display:block;color:var(--navy);font-size:12px;margin-bottom:1px;}
+  .progress-shell{height:6px;background:#e6e9f0;border-radius:999px;margin:22px 0 6px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--navy),var(--gold));width:0%;transition:width .3s ease;}
+  .progress-label{font-size:12px;color:var(--muted);text-align:right;margin-bottom:18px;}
+  .step{display:none;}
+  .step.active{display:block;animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 20px;margin-bottom:16px;}
+  .card h2{font-size:17px;margin:0 0 6px;color:var(--navy-dark);}
+  .card .desc{color:var(--muted);font-size:13.5px;margin:0 0 16px;}
+  .trust-note{font-size:13.5px;color:var(--text);background:#f7f9fc;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;}
+  .verify-box{background:#fbf7ee;border:1px solid #ecd9b6;border-radius:10px;padding:14px 16px;margin-bottom:14px;}
+  .vtitle{font-weight:700;color:var(--navy-dark);font-size:14px;margin-bottom:4px;}
+  .vdesc{font-size:13px;color:var(--muted);margin-bottom:10px;}
+  .verifier{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed #e5d6ae;}
+  .verifier:first-of-type{border-top:none;}
+  .check{color:var(--good);font-weight:700;}
+  .vinfo b{font-size:13.5px;}
+  .vrole{font-size:12.5px;color:var(--muted);margin:2px 0 4px;}
+  .vcontact a{color:var(--navy);text-decoration:none;font-size:12.5px;margin-right:10px;}
+  .benefit-box{background:#eef6f1;border:1px solid #cfe8d8;border-radius:10px;padding:14px 16px;font-size:13.5px;}
+  .benefit-box ul{margin:8px 0 0;padding-left:18px;}
+  .benefit-box li{margin-bottom:4px;}
+  label.check-row{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;cursor:pointer;margin-top:16px;}
+  label.check-row input{margin-top:3px;}
+  .field{display:block;margin-bottom:16px;}
+  .field .lbl{display:block;font-size:13.5px;font-weight:600;color:var(--navy-dark);margin-bottom:6px;}
+  .field .note{display:block;font-size:12px;color:var(--muted);margin-top:4px;}
+  input[type=text],input[type=email],select,textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;color:var(--text);background:#fff;
+  }
+  textarea{min-height:90px;resize:vertical;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,56,100,.12);}
+  .likert-block{margin-bottom:20px;}
+  .likert-q{font-size:14px;font-weight:600;margin-bottom:10px;}
+  .likert-row{display:flex;gap:6px;justify-content:space-between;}
+  .likert-row label{flex:1;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;padding:8px 2px;border:1px solid var(--border);border-radius:8px;background:#fafbfd;}
+  .likert-row input{display:block;margin:0 auto 6px;}
+  .likert-row input:checked + span{color:var(--navy);font-weight:700;}
+  .likert-row label:has(input:checked){border-color:var(--navy);background:#eef2f8;}
+  .likert-anchors{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;}
+  .section-head{font-size:12px;color:var(--navy);font-weight:700;margin:18px 0 10px;text-transform:uppercase;letter-spacing:.03em;}
+  .group-head{font-size:12px;color:var(--navy);font-weight:700;margin:14px 0 4px;}
+  .open-q-block{margin-bottom:16px;}
+  .btn-row{display:flex;justify-content:space-between;gap:10px;margin-top:6px;}
+  button.btn{border:none;border-radius:9px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;}
+  button.btn-primary{background:var(--navy);color:#fff;}
+  button.btn-primary:disabled{background:#a9b3c4;cursor:not-allowed;}
+  button.btn-primary:hover:not(:disabled){background:var(--navy-dark);}
+  button.btn-ghost{background:transparent;color:var(--navy);border:1px solid var(--border);}
+  button.btn-ghost:hover{background:#f1f4f9;}
+  #reviewSummary p{margin:4px 0;font-size:14px;}
+  .thankyou{text-align:center;padding:30px 10px;}
+  .thankyou .icon{font-size:44px;margin-bottom:10px;}
+  .thankyou h2{color:var(--navy-dark);}
+  .code-pill{display:inline-block;background:#eef2f8;border:1px solid var(--border);border-radius:999px;padding:6px 16px;font-weight:700;color:var(--navy);margin:10px 0;}
+  .msg-page{max-width:520px;margin:60px auto;padding:0 16px;text-align:center;}
+  .msg-page h1{color:var(--navy-dark);font-size:20px;}
+  .msg-page p{color:var(--muted);}
+  .msg-page a{color:var(--navy);}
+  .err-banner{background:#fdecea;border:1px solid #f3c2bc;color:var(--bad);border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;display:none;}
+  .warn-banner{background:#fff8e6;border:1px solid #f0dca0;color:#8a6416;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrapRoot">
+
+  <div class="masthead">
+    <span class="tag">KHẢO SÁT PHỤC VỤ NGHIÊN CỨU LUẬN ÁN TIẾN SĨ</span>
+    <h1 id="sessionTitle">Đang tải khảo sát…</h1>
+    <p class="sub" id="sessionDesc"></p>
+    <div class="identity-grid">
+      <div><b>Người thực hiện</b>Trần Văn An — Nghiên cứu sinh, Trường Đại học Kinh tế Quốc dân</div>
+      <div><b>Người hướng dẫn khoa học</b>PGS.TS. Nguyễn Văn Bình</div>
+    </div>
+  </div>
+
+  <div id="loadingBox" class="card"><p class="desc">Đang tải nội dung khảo sát…</p></div>
+
+  <div id="surveyRoot" style="display:none;">
+    <div class="progress-shell"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">Bước 1 / 5</div>
+
+    <div id="alreadyRespondedBanner" class="warn-banner" style="display:none;">Hệ thống ghi nhận mã chuyên gia này đã từng phản hồi khảo sát này trước đó. Anh/Chị vẫn có thể gửi lại nếu muốn cập nhật câu trả lời.</div>
+
+    <!-- STEP 0: Trust & consent -->
+    <div class="step active" data-step="0">
+      <div class="card">
+        <h2>Mục đích &amp; cam kết bảo mật</h2>
+        <p class="desc">Vui lòng đọc trước khi bắt đầu.</p>
+        <div class="trust-note">Khảo sát này phục vụ duy nhất cho mục đích nghiên cứu luận án tiến sĩ. Thông tin Anh/Chị cung cấp chỉ được sử dụng cho phân tích học thuật, không dùng cho mục đích thương mại, không công bố danh tính cá nhân trong luận văn, không chia sẻ cho bên thứ ba.</div>
+        <div class="verify-box">
+          <div class="vtitle">🔒 Danh sách đầu mối xác minh</div>
+          <div class="vdesc">Nếu còn băn khoăn về tính xác thực của khảo sát, Anh/Chị có thể chủ động liên hệ bất kỳ ai dưới đây để xác minh trước khi trả lời — không chỉ riêng người gửi khảo sát.</div>
+          <div class="verifier">
+            <div class="check">✓</div>
+            <div class="vinfo">
+              <b>Phòng Đào tạo Sau đại học</b>
+              <div class="vrole">Đơn vị quản lý nghiên cứu sinh, Trường Đại học Kinh tế Quốc dân</div>
+              <div class="vcontact"><a href="tel:0240000002">📞 024 000 0002</a></div>
+            </div>
+          </div>
+          <div class="verifier">
+            <div class="check">✓</div>
+            <div class="vinfo">
+              <b>PGS.TS. Nguyễn Văn Bình</b>
+              <div class="vrole">Người hướng dẫn khoa học</div>
+              <div class="vcontact"><a href="tel:0900000003">📞 090 000 0003</a></div>
+            </div>
+          </div>
+        </div>
+        <div class="benefit-box">
+          <b>Giá trị Anh/Chị nhận lại:</b>
+          <ul>
+            <li>Bản tóm tắt số liệu &amp; xu hướng thị trường cụm công nghiệp tổng hợp từ nghiên cứu, gửi riêng sau khi hoàn tất.</li>
+            <li>15–20 phút trao đổi chuyên môn hai chiều nếu tham gia phỏng vấn sâu (không bắt buộc).</li>
+          </ul>
+        </div>
+        <label class="check-row"><input type="checkbox" id="consent"> <span>Tôi đã đọc và đồng ý tham gia khảo sát trên tinh thần tự nguyện, hiểu rõ mục đích nghiên cứu học thuật nêu trên.</span></label>
+        <div class="btn-row" style="justify-content:flex-end;margin-top:18px;">
+          <button class="btn btn-primary" id="btnStart" disabled onclick="goStep(1)">Bắt đầu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Identity -->
+    <div class="step" data-step="1">
+      <div class="card">
+        <h2>Thông tin chuyên gia</h2>
+        <p class="desc">Mã chuyên gia dùng để đối chiếu phản hồi, không hiển thị công khai.</p>
+        <label class="field"><span class="lbl">Mã chuyên gia *</span><input type="text" id="expertCode" placeholder="VD: EX-AB12CD"></label>
+        <label class="field"><span class="lbl">Họ và tên</span><input type="text" id="expertName" placeholder="Họ và tên (không bắt buộc)"></label>
+        <label class="field"><span class="lbl">Đơn vị công tác</span><input type="text" id="expertOrg" placeholder="Tên tổ chức / doanh nghiệp"></label>
+        <label class="field"><span class="lbl">Số năm kinh nghiệm</span>
+          <select id="expertExp">
+            <option value="">-- Chọn --</option>
+            <option value="duoi_3">Dưới 3 năm</option>
+            <option value="3_5">3 – 5 năm</option>
+            <option value="5_10">5 – 10 năm</option>
+            <option value="tren_10">Trên 10 năm</option>
+          </select>
+        </label>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goStep(0)">← Quay lại</button>
+          <button class="btn btn-primary" onclick="goStep(2)">Tiếp tục →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Likert questions -->
+    <div class="step" data-step="2">
+      <div class="card">
+        <h2>Đánh giá mức độ ảnh hưởng</h2>
+        <p class="desc">Với mỗi nhận định, chọn mức độ phù hợp nhất theo thang điểm 1–5.</p>
+        <div id="likertGroups"></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goStep(1)">← Quay lại</button>
+          <button class="btn btn-primary" onclick="goStep(3)">Tiếp tục →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Open questions -->
+    <div class="step" data-step="3">
+      <div class="card">
+        <h2>Ý kiến mở</h2>
+        <p class="desc">Không bắt buộc, nhưng ý kiến chi tiết của Anh/Chị rất có giá trị cho nghiên cứu.</p>
+        <div id="openQuestions"></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goStep(2)">← Quay lại</button>
+          <button class="btn btn-primary" onclick="goStep(4)">Xem lại &amp; gửi →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Review -->
+    <div class="step" data-step="4">
+      <div class="card">
+        <h2>Xem lại trước khi gửi</h2>
+        <div id="reviewSummary"></div>
+        <div class="err-banner" id="submitError">Không thể gửi phản hồi lúc này. Vui lòng kiểm tra kết nối mạng và thử lại.</div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goStep(3)">← Quay lại</button>
+          <button class="btn btn-primary" id="btnSubmit" onclick="submitSurvey()">Gửi phản hồi</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Thank you -->
+    <div class="step" data-step="5">
+      <div class="card thankyou">
+        <div class="icon">✅</div>
+        <h2>Cảm ơn Anh/Chị đã tham gia!</h2>
+        <p class="desc">Phản hồi của Anh/Chị đã được ghi nhận thành công.</p>
+        <div class="code-pill">Mã chuyên gia: <span id="finalCode"></span></div>
+        <p class="desc"><a id="backToHubBtn" href="sanh.html">← Quay lại sảnh khảo sát</a></p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE = 'https://script.google.com/macros/s/AKfycbwu_igXxNoxGD6HqpTFumf64kVojwAcM9jLBZMU1XihsYMJsLB88-a6dA7Lyl0HEkSPRg/exec';
+const params = new URLSearchParams(window.location.search);
+const KS = params.get('ks') || '';
+const MA = params.get('ma') || '';
+
+let SESSION = null;
+let QUESTIONS = [];
+let LIKERT_Q = [];
+let OPEN_Q = [];
+let STORAGE_KEY = 'khaosat_draft_default';
+let currentStep = 0;
+const totalSteps = 5;
+
+function showMessagePage(title, message){
+  document.getElementById('wrapRoot').innerHTML =
+    '<div class="msg-page"><h1>' + title + '</h1><p>' + message + '</p>' +
+    '<p><a href="sanh.html">← Quay lại sảnh khảo sát</a></p></div>';
+}
+
+function goStep(n){
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const el = document.querySelector('.step[data-step="' + n + '"]');
+  if (el) el.classList.add('active');
+  currentStep = n;
+  const pct = Math.min(n, totalSteps) / totalSteps * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = n < 5 ? ('Bước ' + (n+1) + ' / 5') : 'Hoàn tất';
+  if (n === 4) buildReviewSummary();
+  window.scrollTo({top:0, behavior:'smooth'});
+  saveDraft();
+}
+
+function saveDraft(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(collectData()));
+  } catch(e){}
+}
+
+function restoreDraft(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    document.getElementById('expertCode').value = d.expertCode || MA || '';
+    document.getElementById('expertName').value = d.expertName || '';
+    document.getElementById('expertOrg').value = d.expertOrg || '';
+    document.getElementById('expertExp').value = d.expertExp || '';
+    Object.entries(d.answers || {}).forEach(([code, val]) => {
+      const likertEl = document.querySelector('input[name="q_' + code + '"][value="' + val + '"]');
+      if (likertEl){ likertEl.checked = true; return; }
+      const textEl = document.getElementById('q_' + code);
+      if (textEl && val) textEl.value = val;
+    });
+  } catch(e){}
+}
+
+function renderLikertGroups(){
+  const container = document.getElementById('likertGroups');
+  let lastLoaiBien = null, lastNhom = null;
+  const loaiBienLabel = { IV: 'Các nhân tố ảnh hưởng (biến độc lập)', DV: 'Đánh giá quyết định đầu tư (biến phụ thuộc)' };
+  LIKERT_Q.forEach(q => {
+    const isDV = q.loai_bien === 'DV';
+    if (q.loai_bien !== lastLoaiBien){
+      const sh = document.createElement('div');
+      sh.className = 'section-head';
+      sh.style.cssText = isDV ? 'border-top:1px solid var(--border);padding-top:16px;' : '';
+      sh.textContent = (isDV ? 'B. ' : 'A. ') + (loaiBienLabel[q.loai_bien] || q.loai_bien);
+      container.appendChild(sh);
+      lastLoaiBien = q.loai_bien;
+      lastNhom = null;
+    }
+    if (q.nhom && q.nhom !== lastNhom){
+      const gh = document.createElement('div');
+      gh.className = 'group-head';
+      gh.textContent = q.nhom;
+      container.appendChild(gh);
+      lastNhom = q.nhom;
+    }
+    const div = document.createElement('div');
+    div.className = 'likert-block';
+    div.innerHTML =
+      '<div class="likert-q">' + q.text + (q.batBuoc ? ' <span style="color:var(--bad)">*</span>' : '') + '</div>' +
+      '<div class="likert-row">' +
+      [1,2,3,4,5].map(val =>
+        '<label><input type="radio" name="q_' + q.ma_bien + '" value="' + val + '"><span>' + val + '</span></label>'
+      ).join('') +
+      '</div>' +
+      '<div class="likert-anchors"><span>Hoàn toàn không ảnh hưởng</span><span>Ảnh hưởng quyết định</span></div>';
+    container.appendChild(div);
+  });
+}
+
+function renderOpenQuestions(){
+  const container = document.getElementById('openQuestions');
+  if (OPEN_Q.length === 0){
+    container.innerHTML = '<p class="desc">Không có câu hỏi mở cho khảo sát này.</p>';
+    return;
+  }
+  OPEN_Q.forEach(q => {
+    const div = document.createElement('div');
+    div.className = 'open-q-block';
+    div.innerHTML =
+      '<label class="field"><span class="lbl">' + q.text + '</span>' +
+      '<textarea id="q_' + q.ma_bien + '" placeholder="' + (q.ghiChu || 'Nhập ý kiến của Anh/Chị...') + '"></textarea></label>';
+    container.appendChild(div);
+  });
+}
+
+function collectData(){
+  const answers = {};
+  QUESTIONS.forEach(q => {
+    if (q.phan === 'danh_gia'){
+      const checked = document.querySelector('input[name="q_' + q.ma_bien + '"]:checked');
+      answers[q.ma_bien] = checked ? Number(checked.value) : null;
+    } else {
+      const el = document.getElementById('q_' + q.ma_bien);
+      answers[q.ma_bien] = el ? el.value.trim() : '';
+    }
+  });
+  return {
+    sessionId: SESSION.sessionId,
+    expertCode: document.getElementById('expertCode').value.trim(),
+    expertName: document.getElementById('expertName').value.trim(),
+    expertOrg: document.getElementById('expertOrg').value.trim(),
+    expertExp: document.getElementById('expertExp').value,
+    answers: answers,
+    submittedAt: new Date().toISOString(),
+  };
+}
+
+function buildReviewSummary(){
+  const d = collectData();
+  const answered = LIKERT_Q.filter(q => d.answers[q.ma_bien] !== null && d.answers[q.ma_bien] !== undefined).length;
+  const ivCount = LIKERT_Q.filter(q => q.loai_bien === 'IV').length;
+  const dvCount = LIKERT_Q.filter(q => q.loai_bien === 'DV').length;
+  document.getElementById('reviewSummary').innerHTML =
+    '<p><b>Mã chuyên gia:</b> ' + (d.expertCode || '(chưa nhập)') + '</p>' +
+    '<p><b>Đơn vị:</b> ' + (d.expertOrg || '(để trống)') + '</p>' +
+    '<p><b>Số câu đã đánh giá:</b> ' + answered + '/' + LIKERT_Q.length +
+      (ivCount || dvCount ? (' (' + ivCount + ' biến độc lập + ' + dvCount + ' biến phụ thuộc)') : '') + '</p>' +
+    '<p><b>Ý kiến mở:</b> ' + (OPEN_Q.some(q => d.answers[q.ma_bien]) ? 'Đã có nội dung' : 'Chưa nhập (không bắt buộc)') + '</p>';
+}
+
+async function submitSurvey(){
+  const data = collectData();
+  if (!data.expertCode){
+    alert('Vui lòng nhập mã chuyên gia trước khi gửi.');
+    goStep(1);
+    return;
+  }
+  const btn = document.getElementById('btnSubmit');
+  const errBox = document.getElementById('submitError');
+  errBox.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Đang gửi...';
+  try {
+    const resp = await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(data),
+    });
+    const result = await resp.json().catch(() => null);
+    if (!result || result.status !== 'ok'){
+      throw new Error('Server returned: ' + JSON.stringify(result));
+    }
+    document.getElementById('finalCode').textContent = data.expertCode;
+    document.getElementById('backToHubBtn').href = 'sanh.html?ma=' + encodeURIComponent(data.expertCode);
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+    goStep(5);
+  } catch(e){
+    errBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Gửi phản hồi';
+  }
+}
+
+function initConsent(){
+  const consentBox = document.getElementById('consent');
+  consentBox.addEventListener('change', () => {
+    document.getElementById('btnStart').disabled = !consentBox.checked;
+  });
+}
+
+function boot(){
+  if (!KS){
+    showMessagePage('Thiếu thông tin khảo sát', 'Đường dẫn không hợp lệ (thiếu mã khảo sát). Vui lòng dùng link được cung cấp trong email mời, hoặc truy cập sảnh khảo sát.');
+    return;
+  }
+  fetch(API_BASE + '?api=session&ks=' + encodeURIComponent(KS) + '&ma=' + encodeURIComponent(MA))
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok){
+        if (data.error === 'not_found'){
+          showMessagePage('Không tìm thấy khảo sát', 'Đường dẫn không đúng hoặc khảo sát đã bị gỡ. Vui lòng kiểm tra lại link được cung cấp, hoặc liên hệ người đã gửi link cho Anh/Chị.');
+        } else if (data.error === 'not_open'){
+          showMessagePage('Khảo sát chưa mở', 'Khảo sát "' + (data.title || '') + '" chưa đến thời gian mở. Vui lòng quay lại sau.');
+        } else if (data.error === 'closed'){
+          showMessagePage('Khảo sát đã kết thúc', 'Khảo sát "' + (data.title || '') + '" đã hết hạn nhận phản hồi' + (data.hanChot ? (' (hạn: ' + data.hanChot + ')') : '') + '. Cảm ơn Anh/Chị đã quan tâm.');
+        } else {
+          showMessagePage('Có lỗi xảy ra', 'Không thể tải khảo sát lúc này. Vui lòng thử lại sau.');
+        }
+        return;
+      }
+      SESSION = data.session;
+      QUESTIONS = data.questions;
+      LIKERT_Q = QUESTIONS.filter(q => q.phan === 'danh_gia');
+      OPEN_Q = QUESTIONS.filter(q => q.phan === 'y_kien_mo');
+      STORAGE_KEY = 'khaosat_draft_' + (SESSION.sessionId || 'default');
+
+      document.getElementById('sessionTitle').textContent = SESSION.title || 'Khảo sát chuyên gia';
+      document.getElementById('sessionDesc').textContent = SESSION.desc || '';
+      document.title = (SESSION.title || 'Khảo sát chuyên gia') + ' | CCN Insight';
+
+      renderLikertGroups();
+      renderOpenQuestions();
+      initConsent();
+      if (MA) document.getElementById('expertCode').value = MA;
+      restoreDraft();
+      if (data.alreadyResponded) document.getElementById('alreadyRespondedBanner').style.display = 'block';
+
+      document.getElementById('loadingBox').style.display = 'none';
+      document.getElementById('surveyRoot').style.display = 'block';
+      goStep(0);
+    })
+    .catch(() => {
+      showMessagePage('Không thể kết nối', 'Đã xảy ra lỗi khi tải khảo sát. Vui lòng kiểm tra kết nối mạng và thử lại.');
+    });
+}
+
+boot();
+</script>
+</body>
+</html>
