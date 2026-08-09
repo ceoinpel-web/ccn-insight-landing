@@ -13,15 +13,18 @@
   *{box-sizing:border-box;}
   body{margin:0;font-family:"Segoe UI","Inter",-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
   .wrap{max-width:960px;margin:0 auto;padding:24px 16px 64px;}
+  .home-link{display:inline-block;margin-bottom:14px;font-size:13px;color:var(--muted);text-decoration:none;}
+  .home-link:hover{color:var(--navy);}
   .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--gold);background:#fbf3e6;border:1px solid #ecd9b6;border-radius:999px;padding:4px 12px;margin-bottom:10px;}
   h1{font-size:22px;margin:0 0 4px;color:var(--navy-dark);}
   .sub{color:var(--muted);margin:0 0 20px;font-size:14px;}
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px;}
-  input[type=text],input[type=date],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;}
+  input[type=text],input[type=email],input[type=date],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;}
   textarea{resize:vertical;min-height:60px;}
   button{cursor:pointer;border:none;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;font-family:inherit;}
+  button:disabled{opacity:.55;cursor:not-allowed;}
   .btn-primary{background:var(--navy);color:#fff;}
   .btn-primary:hover{background:var(--navy-dark);}
   .btn-gold{background:var(--gold);color:#fff;}
@@ -48,6 +51,7 @@
   .modal{background:#fff;border-radius:var(--radius);padding:22px;max-width:640px;width:100%;max-height:88vh;overflow:auto;}
   .modal h3{margin-top:0;}
   .field{margin-bottom:12px;}
+  .field .note{display:block;font-size:12px;color:var(--muted);margin-top:4px;}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .qrow{border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;}
   .muted{color:var(--muted);font-size:12.5px;}
@@ -58,6 +62,7 @@
 </head>
 <body>
 <div class="wrap" id="app">
+  <a href="index.html" class="home-link">← Trang chủ</a>
   <div id="loginView" class="login-box">
     <span class="tag">CCN INSIGHT — QUẢN TRỊ</span>
     <h1>Đăng nhập quản trị</h1>
@@ -119,22 +124,24 @@
     <div id="tabAccounts" class="hidden">
       <div class="card">
         <strong>Tạo tài khoản mới</strong>
+        <p class="muted">Mã đăng nhập sẽ được hệ thống tự tạo nếu để trống, và một email mời kèm link truy cập sẽ được gửi tới địa chỉ email bên dưới.</p>
         <div class="grid2" style="margin-top:10px">
-          <div class="field"><label>Mã đăng nhập</label><input type="text" id="accId" placeholder="vd: ncs-abc123"></div>
-          <div class="field"><label>Tên hiển thị</label><input type="text" id="accName"></div>
+          <div class="field"><label>Email NCS/Admin mới *</label><input type="email" id="accEmail" placeholder="vd: nguoi.moi@gmail.com"></div>
+          <div class="field"><label>Tên hiển thị *</label><input type="text" id="accName"></div>
           <div class="field"><label>Vai trò</label>
             <select id="accRole"><option value="ncs">NCS</option><option value="admin">Admin</option></select>
           </div>
           <div class="field"><label>Ngôn ngữ hỗ trợ (nếu là Admin phụ trách ngôn ngữ)</label>
             <select id="accLang"><option value="">— không —</option><option value="en">Tiếng Anh</option><option value="zh">Tiếng Trung</option></select>
           </div>
+          <div class="field"><label>Mã đăng nhập (không bắt buộc — để trống hệ thống tự tạo)</label><input type="text" id="accId" placeholder="vd: ncs-abc123"></div>
         </div>
-        <button class="btn-primary" id="btnCreateAccount">Tạo tài khoản</button>
+        <button class="btn-primary" id="btnCreateAccount">Tạo tài khoản &amp; gửi email mời</button>
       </div>
       <div class="card" style="padding:0;overflow:auto">
         <table>
-          <thead><tr><th>Mã</th><th>Tên</th><th>Vai trò</th><th>Ngôn ngữ</th><th>Trạng thái</th><th></th></tr></thead>
-          <tbody id="accountsBody"><tr><td colspan="6" class="muted">Đang tải…</td></tr></tbody>
+          <thead><tr><th>Mã</th><th>Tên</th><th>Email</th><th>Vai trò</th><th>Ngôn ngữ</th><th>Trạng thái</th><th></th></tr></thead>
+          <tbody id="accountsBody"><tr><td colspan="7" class="muted">Đang tải…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -147,7 +154,8 @@
 <div class="modal-bg hidden" id="sessionModal">
   <div class="modal">
     <h3 id="smTitle">Khảo sát</h3>
-    <div class="field"><label>Mã khảo sát (session_id, không đổi được sau khi tạo)</label><input type="text" id="smId"></div>
+    <div id="smMsg"></div>
+    <div class="field"><label>Mã khảo sát (tự động tạo — có thể sửa nếu muốn, không đổi được sau khi lưu)</label><input type="text" id="smId"></div>
     <div class="field"><label>Tên khảo sát</label><input type="text" id="smTen"></div>
     <div class="field"><label>Mô tả</label><textarea id="smMoTa"></textarea></div>
     <div class="grid2">
@@ -163,6 +171,7 @@
       <div>
         <button class="btn-ghost btn-sm" id="smOpenQuestions">Sửa câu hỏi</button>
         <button class="btn-ghost btn-sm" id="smOpenResults">Xem kết quả</button>
+        <button class="btn-danger btn-sm hidden" id="smDelete">Xoá khảo sát</button>
       </div>
       <div>
         <button class="btn-ghost" id="smCancel">Đóng</button>
@@ -203,10 +212,15 @@ let sessions = [];
 let currentSessionId = null;
 let currentBoId = null;
 
+try { localStorage.setItem('ccn_insight_last_page', JSON.stringify({url: location.href, label: document.title})); } catch(e){}
+
 function qs(id){ return document.getElementById(id); }
 function showMsg(text, ok){
   qs('msgBox').innerHTML = '<div class="msg ' + (ok?'msg-ok':'msg-err') + '">' + text + '</div>';
   setTimeout(()=>{ qs('msgBox').innerHTML=''; }, 5000);
+}
+function showModalMsg(text, ok){
+  qs('smMsg').innerHTML = '<div class="msg ' + (ok?'msg-ok':'msg-err') + '">' + text + '</div>';
 }
 function api(action, extraParams){
   const p = new URLSearchParams(Object.assign({api:action, ncs: MY_CODE}, extraParams||{}));
@@ -214,6 +228,9 @@ function api(action, extraParams){
 }
 function post(body){
   return fetch(API_BASE, {method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(Object.assign({ncs: MY_CODE}, body))}).then(r=>r.json());
+}
+function genSessionId(){
+  return 'ks_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 }
 
 function doLogin(code){
@@ -273,12 +290,27 @@ function loadSessions(){
         '<td>'+(s.trang_thai||'')+'</td>' +
         '<td>'+(s.cong_khai?'Có':'Không')+'</td>' +
         '<td>'+formatDateCell(s.han_chot)+'</td>' +
-        '<td><button class="btn-ghost btn-sm" data-open="'+s.session_id+'">Mở</button></td>' +
+        '<td><button class="btn-ghost btn-sm" data-open="'+s.session_id+'">Mở</button>' +
+          (own ? ' <button class="btn-danger btn-sm" data-del="'+s.session_id+'">Xoá</button>' : '') +
+        '</td>' +
         '</tr>';
     }).join('');
     body.querySelectorAll('[data-open]').forEach(el=>{
       el.addEventListener('click', e=>{ e.preventDefault(); openSessionModal(el.dataset.open); });
     });
+    body.querySelectorAll('[data-del]').forEach(el=>{
+      el.addEventListener('click', e=>{ e.preventDefault(); deleteSession(el.dataset.del); });
+    });
+  });
+}
+
+function deleteSession(sessionId){
+  const s = sessions.find(x=>x.session_id===sessionId);
+  const ten = s ? (s.ten_khao_sat||sessionId) : sessionId;
+  if (!confirm('Xoá khảo sát "' + ten + '"? Danh sách khảo sát sẽ mất mục này (dữ liệu kết quả đã thu thập vẫn được giữ lại trong hệ thống).')) return;
+  post({action:'delete_session', session_id: sessionId}).then(res=>{
+    if (res.ok){ showMsg('Đã xoá khảo sát.', true); qs('sessionModal').classList.add('hidden'); loadSessions(); }
+    else showMsg('Lỗi: ' + (res.error||''), false);
   });
 }
 
@@ -286,8 +318,9 @@ function openSessionModal(sessionId){
   const s = sessionId ? sessions.find(x=>x.session_id===sessionId) : null;
   currentSessionId = sessionId || null;
   const canEdit = !s || s._canEdit;
+  qs('smMsg').innerHTML = '';
   qs('smTitle').textContent = s ? 'Sửa khảo sát' : 'Tạo khảo sát mới';
-  qs('smId').value = s ? s.session_id : '';
+  qs('smId').value = s ? s.session_id : genSessionId();
   qs('smId').disabled = !!s;
   qs('smTen').value = s ? s.ten_khao_sat||'' : '';
   qs('smMoTa').value = s ? s.mo_ta||'' : '';
@@ -299,10 +332,12 @@ function openSessionModal(sessionId){
   [qs('smTen'),qs('smMoTa'),qs('smBo'),qs('smTrangThai'),qs('smNgayMo'),qs('smHanChot'),qs('smCongKhai'),qs('smSave')].forEach(el=>{ el.disabled = !canEdit; });
   qs('smOpenQuestions').classList.toggle('hidden', !s);
   qs('smOpenResults').classList.toggle('hidden', !s);
+  qs('smDelete').classList.toggle('hidden', !s || !canEdit);
   qs('sessionModal').classList.remove('hidden');
 }
 qs('btnNewSession').addEventListener('click', ()=>openSessionModal(null));
 qs('smCancel').addEventListener('click', ()=>qs('sessionModal').classList.add('hidden'));
+qs('smDelete').addEventListener('click', ()=>{ if (currentSessionId) deleteSession(currentSessionId); });
 qs('smSave').addEventListener('click', ()=>{
   const s = {
     session_id: qs('smId').value.trim(),
@@ -314,16 +349,17 @@ qs('smSave').addEventListener('click', ()=>{
     han_chot: qs('smHanChot').value,
     cong_khai: qs('smCongKhai').checked
   };
-  if (!s.session_id){ showMsg('Cần nhập mã khảo sát.', false); return; }
+  if (!s.session_id){ showModalMsg('Cần nhập mã khảo sát.', false); return; }
+  if (!s.ten_khao_sat){ showModalMsg('Cần nhập tên khảo sát.', false); return; }
   post({action:'save_session', session:s}).then(res=>{
     if (res.ok){ showMsg('Đã lưu khảo sát.', true); qs('sessionModal').classList.add('hidden'); loadSessions(); }
-    else showMsg('Lỗi: ' + (res.error||''), false);
-  });
+    else showModalMsg('Lỗi: ' + (res.error||''), false);
+  }).catch(()=>{ showModalMsg('Không thể kết nối máy chủ. Vui lòng thử lại.', false); });
 });
 
 qs('smOpenQuestions').addEventListener('click', ()=>{
   const boId = qs('smBo').value.trim();
-  if (!boId){ showMsg('Cần nhập bộ câu hỏi trước.', false); return; }
+  if (!boId){ showModalMsg('Cần nhập bộ câu hỏi trước.', false); return; }
   openQuestions(boId);
 });
 function openQuestions(boId){
@@ -384,7 +420,7 @@ qs('qSave').addEventListener('click', ()=>{
 qs('smOpenResults').addEventListener('click', ()=>{
   if (!currentSessionId) return;
   api('admin_results', {ks: currentSessionId}).then(res=>{
-    if (!res.ok){ showMsg('Không có quyền xem kết quả.', false); return; }
+    if (!res.ok){ showModalMsg('Không có quyền xem kết quả.', false); return; }
     qs('rTitle').textContent = currentSessionId;
     const thead = qs('rTable').querySelector('thead');
     const tbody = qs('rTable').querySelector('tbody');
@@ -439,10 +475,10 @@ qs('btnSendRequest').addEventListener('click', ()=>{
 function loadAccounts(){
   api('admin_accounts').then(res=>{
     const body = qs('accountsBody');
-    if (!res.ok){ body.innerHTML = '<tr><td colspan="6" class="muted">Không có quyền.</td></tr>'; return; }
+    if (!res.ok){ body.innerHTML = '<tr><td colspan="7" class="muted">Không có quyền.</td></tr>'; return; }
     body.innerHTML = (res.accounts||[]).map(a=>{
       const isLocked = a.trang_thai === 'khoa';
-      return '<tr><td>'+a.account_id+'</td><td>'+a.ten_hien_thi+'</td><td>'+a.role+'</td><td>'+(a.ngon_ngu_ho_tro||'—')+'</td>' +
+      return '<tr><td>'+a.account_id+'</td><td>'+a.ten_hien_thi+'</td><td>'+(a.email||'—')+'</td><td>'+a.role+'</td><td>'+(a.ngon_ngu_ho_tro||'—')+'</td>' +
         '<td>'+a.trang_thai+'</td><td><button class="btn-ghost btn-sm" data-toggle="'+a.account_id+'" data-status="'+(isLocked?'active':'khoa')+'">'+(isLocked?'Mở khoá':'Khoá')+'</button></td></tr>';
     }).join('');
     body.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click', ()=>{
@@ -456,18 +492,26 @@ qs('btnCreateAccount').addEventListener('click', ()=>{
   const account = {
     account_id: qs('accId').value.trim(),
     ten_hien_thi: qs('accName').value.trim(),
+    email: qs('accEmail').value.trim(),
     role: qs('accRole').value,
     ngon_ngu_ho_tro: qs('accLang').value
   };
-  if (!account.account_id || !account.ten_hien_thi){ showMsg('Cần nhập mã và tên.', false); return; }
+  if (!account.ten_hien_thi || !account.email){ showMsg('Cần nhập tên và email.', false); return; }
+  const btn = qs('btnCreateAccount');
+  btn.disabled = true;
   post({action:'create_account', account: account}).then(res=>{
-    if (res.ok){ showMsg('Đã tạo tài khoản.', true); qs('accId').value=''; qs('accName').value=''; loadAccounts(); }
-    else showMsg('Lỗi: '+(res.error||''), false);
-  });
+    btn.disabled = false;
+    if (res.ok){
+      showMsg('Đã tạo tài khoản (mã: ' + res.account_id + ')' + (res.emailSent ? ' và đã gửi email mời tới ' + account.email + '.' : ' — không gửi được email mời, vui lòng gửi mã đăng nhập cho người dùng theo cách khác.'), true);
+      qs('accId').value=''; qs('accName').value=''; qs('accEmail').value=''; qs('accLang').value='';
+      loadAccounts();
+    } else {
+      showMsg('Lỗi: '+(res.error||''), false);
+    }
+  }).catch(()=>{ btn.disabled = false; showMsg('Không thể kết nối máy chủ. Vui lòng thử lại.', false); });
 });
 
 if (MY_CODE) doLogin(MY_CODE);
 </script>
 </body>
 </html>
-
