@@ -62,6 +62,7 @@
   .field{display:block;margin-bottom:16px;}
   .field .lbl{display:block;font-size:13.5px;font-weight:600;color:var(--navy-dark);margin-bottom:6px;}
   .field .note{display:block;font-size:12px;color:var(--muted);margin-top:4px;}
+  input[readonly]{background:#f4f6f9;color:var(--muted);}
   input[type=text],input[type=email],select,textarea{
     width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;color:var(--text);background:#fff;
   }
@@ -166,7 +167,7 @@
       <div class="card">
         <h2>Thông tin chuyên gia</h2>
         <p class="desc">Mã chuyên gia dùng để đối chiếu phản hồi, không hiển thị công khai.</p>
-        <label class="field"><span class="lbl">Mã chuyên gia *</span><input type="text" id="expertCode" placeholder="VD: EX-AB12CD"></label>
+        <label class="field"><span class="lbl">Mã chuyên gia *</span><input type="text" id="expertCode" placeholder="Đang cấp mã…" readonly><span class="note" id="expertCodeNote">Mã do hệ thống tự cấp, dùng để đối chiếu phản hồi — không cần tự nhập.</span></label>
         <label class="field"><span class="lbl">Họ và tên</span><input type="text" id="expertName" placeholder="Họ và tên (không bắt buộc)"></label>
         <label class="field"><span class="lbl">Đơn vị công tác</span><input type="text" id="expertOrg" placeholder="Tên tổ chức / doanh nghiệp"></label>
         <label class="field"><span class="lbl">Số năm kinh nghiệm</span>
@@ -242,7 +243,8 @@
 const API_BASE = 'https://script.google.com/macros/s/AKfycbwu_igXxNoxGD6HqpTFumf64kVojwAcM9jLBZMU1XihsYMJsLB88-a6dA7Lyl0HEkSPRg/exec';
 const params = new URLSearchParams(window.location.search);
 const KS = params.get('ks') || '';
-const MA = params.get('ma') || '';
+let MA = params.get('ma') || '';
+const TOKEN = params.get('token') || '';
 
 try { localStorage.setItem('ccn_insight_last_page', JSON.stringify({url: location.href, label: document.title})); } catch(e){}
 
@@ -252,7 +254,24 @@ let LIKERT_Q = [];
 let OPEN_Q = [];
 let STORAGE_KEY = 'khaosat_draft_default';
 let currentStep = 0;
+let formOpenedAt = null;
 const totalSteps = 5;
+
+function computeDeviceHash(){
+  try {
+    const parts = [
+      navigator.userAgent || '',
+      String(screen.width) + 'x' + String(screen.height),
+      Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+      String(navigator.language || '')
+    ].join('|');
+    let hash = 0;
+    for (let i = 0; i < parts.length; i++) {
+      hash = ((hash << 5) - hash + parts.charCodeAt(i)) | 0;
+    }
+    return 'dh_' + Math.abs(hash).toString(36);
+  } catch(e){ return ''; }
+}
 
 function showMessagePage(title, message){
   document.getElementById('wrapRoot').innerHTML =
@@ -369,6 +388,9 @@ function collectData(){
     expertExp: document.getElementById('expertExp').value,
     answers: answers,
     submittedAt: new Date().toISOString(),
+    token: TOKEN || '',
+    formOpenedAt: formOpenedAt || '',
+    deviceHash: computeDeviceHash(),
   };
 }
 
@@ -405,13 +427,15 @@ async function submitSurvey(){
     });
     const result = await resp.json().catch(() => null);
     if (!result || result.status !== 'ok'){
-      throw new Error('Server returned: ' + JSON.stringify(result));
+      const msg = result && result.message ? result.message : 'Không thể gửi phản hồi lúc này. Vui lòng kiểm tra kết nối mạng và thử lại.';
+      throw new Error(msg);
     }
     document.getElementById('finalCode').textContent = data.expertCode;
     document.getElementById('backToHubBtn').href = 'sanh.html?ma=' + encodeURIComponent(data.expertCode);
     try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
     goStep(5);
   } catch(e){
+    errBox.textContent = e && e.message ? e.message : 'Không thể gửi phản hồi lúc này. Vui lòng kiểm tra kết nối mạng và thử lại.';
     errBox.style.display = 'block';
     btn.disabled = false;
     btn.textContent = 'Gửi phản hồi';
@@ -430,7 +454,7 @@ function boot(){
     showMessagePage('Thiếu thông tin khảo sát', 'Đường dẫn không hợp lệ (thiếu mã khảo sát). Vui lòng dùng link được cung cấp trong email mời, hoặc truy cập sảnh khảo sát.');
     return;
   }
-  fetch(API_BASE + '?api=session&ks=' + encodeURIComponent(KS) + '&ma=' + encodeURIComponent(MA))
+  fetch(API_BASE + '?api=session&ks=' + encodeURIComponent(KS) + '&ma=' + encodeURIComponent(MA) + '&token=' + encodeURIComponent(TOKEN))
     .then(r => r.json())
     .then(data => {
       if (!data.ok){
@@ -440,6 +464,12 @@ function boot(){
           showMessagePage('Khảo sát chưa mở', 'Khảo sát "' + (data.title || '') + '" chưa đến thời gian mở. Vui lòng quay lại sau.');
         } else if (data.error === 'closed'){
           showMessagePage('Khảo sát đã kết thúc', 'Khảo sát "' + (data.title || '') + '" đã hết hạn nhận phản hồi' + (data.hanChot ? (' (hạn: ' + data.hanChot + ')') : '') + '. Cảm ơn Anh/Chị đã quan tâm.');
+        } else if (data.error === 'invite_required'){
+          showMessagePage('Khảo sát chỉ mở cho người được mời', 'Khảo sát "' + (data.title || '') + '" chỉ nhận phản hồi qua link mời gửi riêng qua email. Vui lòng dùng đúng link được gửi cho Anh/Chị, hoặc liên hệ người mời để được cấp link.');
+        } else if (data.error === 'invalid_token' || data.error === 'token_used'){
+          showMessagePage('Link mời không còn hiệu lực', data.error === 'token_used' ? 'Link mời này đã được dùng để nộp phiếu trước đó. Mỗi link mời chỉ dùng được một lần.' : 'Link mời không hợp lệ cho khảo sát này. Vui lòng dùng đúng link được gửi cho Anh/Chị.');
+        } else if (data.error === 'already_locked'){
+          showMessagePage('Đã ghi nhận phản hồi trước đó', 'Mã chuyên gia này đã nộp phiếu cho khảo sát "' + (data.title || '') + '" và khảo sát này không cho phép nộp lại.');
         } else {
           showMessagePage('Có lỗi xảy ra', 'Không thể tải khảo sát lúc này. Vui lòng thử lại sau.');
         }
@@ -458,13 +488,38 @@ function boot(){
       renderLikertGroups();
       renderOpenQuestions();
       initConsent();
-      if (MA) document.getElementById('expertCode').value = MA;
-      restoreDraft();
-      if (data.alreadyResponded) document.getElementById('alreadyRespondedBanner').style.display = 'block';
+      formOpenedAt = new Date().toISOString();
 
-      document.getElementById('loadingBox').style.display = 'none';
-      document.getElementById('surveyRoot').style.display = 'block';
-      goStep(0);
+      const ecInput = document.getElementById('expertCode');
+      if (MA) {
+        ecInput.value = MA;
+        restoreDraft();
+        if (data.alreadyResponded) document.getElementById('alreadyRespondedBanner').style.display = 'block';
+        document.getElementById('loadingBox').style.display = 'none';
+        document.getElementById('surveyRoot').style.display = 'block';
+        goStep(0);
+      } else {
+        fetch(API_BASE + '?api=new_expert_code&ks=' + encodeURIComponent(KS))
+          .then(r => r.json())
+          .then(codeRes => {
+            if (codeRes && codeRes.ok && codeRes.code) {
+              MA = codeRes.code;
+              ecInput.value = MA;
+            } else {
+              document.getElementById('expertCodeNote').textContent = 'Không thể tự cấp mã, vui lòng tải lại trang.';
+            }
+            restoreDraft();
+            document.getElementById('loadingBox').style.display = 'none';
+            document.getElementById('surveyRoot').style.display = 'block';
+            goStep(0);
+          })
+          .catch(() => {
+            document.getElementById('expertCodeNote').textContent = 'Không thể tự cấp mã, vui lòng tải lại trang.';
+            document.getElementById('loadingBox').style.display = 'none';
+            document.getElementById('surveyRoot').style.display = 'block';
+            goStep(0);
+          });
+      }
     })
     .catch(() => {
       showMessagePage('Không thể kết nối', 'Đã xảy ra lỗi khi tải khảo sát. Vui lòng kiểm tra kết nối mạng và thử lại.');
