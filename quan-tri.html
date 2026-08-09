@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản trị | CCN Insight</title>
+<style>
+  :root{
+    --navy:#1f3864; --navy-dark:#14294a; --gold:#b8892b; --bg:#f4f6f9;
+    --card:#ffffff; --text:#26313f; --muted:#697487; --border:#e2e6ee; --radius:12px;
+    --green:#1e7e34; --red:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI","Inter",-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 16px 64px;}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--gold);background:#fbf3e6;border:1px solid #ecd9b6;border-radius:999px;padding:4px 12px;margin-bottom:10px;}
+  h1{font-size:22px;margin:0 0 4px;color:var(--navy-dark);}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:14px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px;}
+  input[type=text],input[type=date],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;}
+  textarea{resize:vertical;min-height:60px;}
+  button{cursor:pointer;border:none;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;font-family:inherit;}
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-primary:hover{background:var(--navy-dark);}
+  .btn-gold{background:var(--gold);color:#fff;}
+  .btn-ghost{background:#eef2f8;color:var(--navy-dark);}
+  .btn-danger{background:#fdecea;color:var(--red);}
+  .btn-sm{padding:5px 10px;font-size:12.5px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;}
+  .badge-own{background:#eaf5ec;color:var(--green);}
+  .badge-view{background:#eef2f8;color:var(--navy);}
+  .badge-pending{background:#fff6e0;color:#946200;}
+  .badge-approved{background:#eaf5ec;color:var(--green);}
+  .badge-rejected{background:#fdecea;color:var(--red);}
+  .tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+  .tab-btn{background:#eef2f8;color:var(--navy-dark);padding:8px 16px;border-radius:999px;font-size:13px;}
+  .tab-btn.active{background:var(--navy);color:#fff;}
+  .hidden{display:none !important;}
+  .msg{font-size:13.5px;padding:10px 14px;border-radius:8px;margin-bottom:14px;}
+  .msg-err{background:#fdecea;color:var(--red);}
+  .msg-ok{background:#eaf5ec;color:var(--green);}
+  .modal-bg{position:fixed;inset:0;background:rgba(20,30,50,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:1000;}
+  .modal{background:#fff;border-radius:var(--radius);padding:22px;max-width:640px;width:100%;max-height:88vh;overflow:auto;}
+  .modal h3{margin-top:0;}
+  .field{margin-bottom:12px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .qrow{border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;}
+  .muted{color:var(--muted);font-size:12.5px;}
+  .login-box{max-width:380px;margin:60px auto;text-align:center;}
+  .footer-links{margin-top:26px;text-align:center;font-size:12.5px;color:var(--muted);}
+  .footer-links a{color:var(--navy);}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div id="loginView" class="login-box">
+    <span class="tag">CCN INSIGHT — QUẢN TRỊ</span>
+    <h1>Đăng nhập quản trị</h1>
+    <p class="sub">Nhập mã tài khoản NCS/Admin để tiếp tục.</p>
+    <div class="field"><input type="text" id="loginCode" placeholder="Mã tài khoản"></div>
+    <button class="btn-primary" id="btnLogin" style="width:100%">Đăng nhập</button>
+    <div id="loginMsg"></div>
+  </div>
+
+  <div id="mainView" class="hidden">
+    <span class="tag">CCN INSIGHT — QUẢN TRỊ</span>
+    <h1 id="pageTitle">Quản lý nội dung khảo sát</h1>
+    <p class="sub" id="whoami"></p>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="sessions">Khảo sát</button>
+      <button class="tab-btn" data-tab="access">Yêu cầu truy cập</button>
+      <button class="tab-btn hidden" id="tabAccountsBtn" data-tab="accounts">Tài khoản</button>
+    </div>
+
+    <div id="msgBox"></div>
+
+    <!-- TAB: sessions -->
+    <div id="tabSessions">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <strong>Danh sách khảo sát</strong>
+          <button class="btn-primary btn-sm" id="btnNewSession">+ Tạo khảo sát mới</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:auto">
+        <table>
+          <thead><tr><th>Tên khảo sát</th><th>Chủ sở hữu</th><th>Trạng thái</th><th>Công khai</th><th>Hạn chót</th><th></th></tr></thead>
+          <tbody id="sessionsBody"><tr><td colspan="6" class="muted">Đang tải…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: access requests -->
+    <div id="tabAccess" class="hidden">
+      <div class="card">
+        <strong>Gửi yêu cầu truy cập kết quả của NCS khác</strong>
+        <p class="muted">Yêu cầu chỉ cho phép <b>xem</b> khảo sát &amp; kết quả của NCS khác, không được sửa. Cần cả NCS đó và Admin đồng ý.</p>
+        <div class="row">
+          <div style="flex:1;min-width:160px"><label>Mã NCS sở hữu</label><input type="text" id="reqOwnerCode" placeholder="vd: ncs-xxxx"></div>
+          <div style="flex:2;min-width:200px"><label>Lý do (không bắt buộc)</label><input type="text" id="reqReason"></div>
+          <button class="btn-primary" id="btnSendRequest" style="margin-top:20px">Gửi yêu cầu</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:auto">
+        <table>
+          <thead><tr><th>Người yêu cầu</th><th>NCS sở hữu</th><th>Lý do</th><th>Trạng thái</th><th></th></tr></thead>
+          <tbody id="accessBody"><tr><td colspan="5" class="muted">Đang tải…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: accounts (admin only) -->
+    <div id="tabAccounts" class="hidden">
+      <div class="card">
+        <strong>Tạo tài khoản mới</strong>
+        <div class="grid2" style="margin-top:10px">
+          <div class="field"><label>Mã đăng nhập</label><input type="text" id="accId" placeholder="vd: ncs-abc123"></div>
+          <div class="field"><label>Tên hiển thị</label><input type="text" id="accName"></div>
+          <div class="field"><label>Vai trò</label>
+            <select id="accRole"><option value="ncs">NCS</option><option value="admin">Admin</option></select>
+          </div>
+          <div class="field"><label>Ngôn ngữ hỗ trợ (nếu là Admin phụ trách ngôn ngữ)</label>
+            <select id="accLang"><option value="">— không —</option><option value="en">Tiếng Anh</option><option value="zh">Tiếng Trung</option></select>
+          </div>
+        </div>
+        <button class="btn-primary" id="btnCreateAccount">Tạo tài khoản</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto">
+        <table>
+          <thead><tr><th>Mã</th><th>Tên</th><th>Vai trò</th><th>Ngôn ngữ</th><th>Trạng thái</th><th></th></tr></thead>
+          <tbody id="accountsBody"><tr><td colspan="6" class="muted">Đang tải…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer-links"><a href="sanh.html">← Về sảnh khảo sát</a></div>
+  </div>
+</div>
+
+<!-- Modal: session editor -->
+<div class="modal-bg hidden" id="sessionModal">
+  <div class="modal">
+    <h3 id="smTitle">Khảo sát</h3>
+    <div class="field"><label>Mã khảo sát (session_id, không đổi được sau khi tạo)</label><input type="text" id="smId"></div>
+    <div class="field"><label>Tên khảo sát</label><input type="text" id="smTen"></div>
+    <div class="field"><label>Mô tả</label><textarea id="smMoTa"></textarea></div>
+    <div class="grid2">
+      <div class="field"><label>Bộ câu hỏi (bo_cau_hoi_id)</label><input type="text" id="smBo"></div>
+      <div class="field"><label>Trạng thái</label>
+        <select id="smTrangThai"><option value="mo">Đang mở</option><option value="sap_mo">Sắp mở</option><option value="da_dong">Đã đóng</option></select>
+      </div>
+      <div class="field"><label>Ngày mở</label><input type="date" id="smNgayMo"></div>
+      <div class="field"><label>Hạn chót</label><input type="date" id="smHanChot"></div>
+    </div>
+    <div class="field"><label><input type="checkbox" id="smCongKhai" style="width:auto"> Công khai trong sảnh khảo sát</label></div>
+    <div class="row" style="justify-content:space-between;margin-top:14px">
+      <div>
+        <button class="btn-ghost btn-sm" id="smOpenQuestions">Sửa câu hỏi</button>
+        <button class="btn-ghost btn-sm" id="smOpenResults">Xem kết quả</button>
+      </div>
+      <div>
+        <button class="btn-ghost" id="smCancel">Đóng</button>
+        <button class="btn-primary" id="smSave">Lưu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: questions editor -->
+<div class="modal-bg hidden" id="qModal">
+  <div class="modal">
+    <h3>Bộ câu hỏi: <span id="qBoId"></span></h3>
+    <div id="qList"></div>
+    <button class="btn-ghost btn-sm" id="qAddRow">+ Thêm câu hỏi</button>
+    <div class="row" style="justify-content:flex-end;margin-top:14px">
+      <button class="btn-ghost" id="qCancel">Đóng</button>
+      <button class="btn-primary" id="qSave">Lưu câu hỏi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: results viewer -->
+<div class="modal-bg hidden" id="rModal">
+  <div class="modal" style="max-width:900px">
+    <h3>Kết quả: <span id="rTitle"></span></h3>
+    <div style="overflow:auto;max-height:60vh"><table id="rTable"><thead></thead><tbody></tbody></table></div>
+    <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn-ghost" id="rCancel">Đóng</button></div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://script.google.com/macros/s/AKfycbwu_igXxNoxGD6HqpTFumf64kVojwAcM9jLBZMU1XihsYMJsLB88-a6dA7Lyl0HEkSPRg/exec';
+const params = new URLSearchParams(window.location.search);
+let MY_CODE = params.get('ncs') || '';
+let ME = null;
+let sessions = [];
+let currentSessionId = null;
+let currentBoId = null;
+
+function qs(id){ return document.getElementById(id); }
+function showMsg(text, ok){
+  qs('msgBox').innerHTML = '<div class="msg ' + (ok?'msg-ok':'msg-err') + '">' + text + '</div>';
+  setTimeout(()=>{ qs('msgBox').innerHTML=''; }, 5000);
+}
+function api(action, extraParams){
+  const p = new URLSearchParams(Object.assign({api:action, ncs: MY_CODE}, extraParams||{}));
+  return fetch(API_BASE + '?' + p.toString()).then(r=>r.json());
+}
+function post(body){
+  return fetch(API_BASE, {method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(Object.assign({ncs: MY_CODE}, body))}).then(r=>r.json());
+}
+
+function doLogin(code){
+  MY_CODE = code;
+  api('admin_whoami').then(res=>{
+    if (!res.ok){
+      qs('loginMsg').innerHTML = '<div class="msg msg-err">Mã không đúng hoặc tài khoản đã bị khoá.</div>';
+      return;
+    }
+    ME = res.account;
+    const url = new URL(window.location.href);
+    url.searchParams.set('ncs', MY_CODE);
+    window.history.replaceState({}, '', url);
+    qs('loginView').classList.add('hidden');
+    qs('mainView').classList.remove('hidden');
+    qs('whoami').textContent = 'Xin chào ' + ME.ten_hien_thi + ' (' + (ME.role==='admin'?'Admin':'NCS') + (ME.ngon_ngu_ho_tro ? ', hỗ trợ tiếng ' + (ME.ngon_ngu_ho_tro==='en'?'Anh':'Trung') : '') + ')';
+    if (ME.role === 'admin') qs('tabAccountsBtn').classList.remove('hidden');
+    loadSessions();
+    loadAccessRequests();
+  });
+}
+
+qs('btnLogin').addEventListener('click', ()=>{
+  const c = qs('loginCode').value.trim();
+  if (c) doLogin(c);
+});
+qs('loginCode').addEventListener('keydown', e=>{ if (e.key==='Enter') qs('btnLogin').click(); });
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    ['sessions','access','accounts'].forEach(t=>{
+      qs('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('hidden', t !== btn.dataset.tab);
+    });
+    if (btn.dataset.tab === 'accounts') loadAccounts();
+  });
+});
+
+function formatDateCell(v){
+  if (!v) return '';
+  try { const d = new Date(v); if (!isNaN(d)) return d.toLocaleDateString('vi-VN'); } catch(e){}
+  return v;
+}
+
+function loadSessions(){
+  api('admin_sessions').then(res=>{
+    const body = qs('sessionsBody');
+    if (!res.ok){ body.innerHTML = '<tr><td colspan="6" class="muted">Lỗi tải danh sách.</td></tr>'; return; }
+    sessions = res.sessions || [];
+    if (!sessions.length){ body.innerHTML = '<tr><td colspan="6" class="muted">Chưa có khảo sát nào.</td></tr>'; return; }
+    body.innerHTML = sessions.map(s=>{
+      const own = s._canEdit;
+      return '<tr>' +
+        '<td><a href="#" data-open="'+s.session_id+'" style="color:var(--navy);font-weight:600;text-decoration:none">'+(s.ten_khao_sat||s.session_id)+'</a></td>' +
+        '<td>'+s.ncs_owner+' <span class="badge '+(own?'badge-own':'badge-view')+'">'+(own?'Sở hữu':'Chỉ xem')+'</span></td>' +
+        '<td>'+(s.trang_thai||'')+'</td>' +
+        '<td>'+(s.cong_khai?'Có':'Không')+'</td>' +
+        '<td>'+formatDateCell(s.han_chot)+'</td>' +
+        '<td><button class="btn-ghost btn-sm" data-open="'+s.session_id+'">Mở</button></td>' +
+        '</tr>';
+    }).join('');
+    body.querySelectorAll('[data-open]').forEach(el=>{
+      el.addEventListener('click', e=>{ e.preventDefault(); openSessionModal(el.dataset.open); });
+    });
+  });
+}
+
+function openSessionModal(sessionId){
+  const s = sessionId ? sessions.find(x=>x.session_id===sessionId) : null;
+  currentSessionId = sessionId || null;
+  const canEdit = !s || s._canEdit;
+  qs('smTitle').textContent = s ? 'Sửa khảo sát' : 'Tạo khảo sát mới';
+  qs('smId').value = s ? s.session_id : '';
+  qs('smId').disabled = !!s;
+  qs('smTen').value = s ? s.ten_khao_sat||'' : '';
+  qs('smMoTa').value = s ? s.mo_ta||'' : '';
+  qs('smBo').value = s ? s.bo_cau_hoi_id||'' : '';
+  qs('smTrangThai').value = s ? (s.trang_thai||'mo') : 'mo';
+  qs('smNgayMo').value = s && s.ngay_mo ? String(s.ngay_mo).slice(0,10) : '';
+  qs('smHanChot').value = s && s.han_chot ? String(s.han_chot).slice(0,10) : '';
+  qs('smCongKhai').checked = s ? !!s.cong_khai : false;
+  [qs('smTen'),qs('smMoTa'),qs('smBo'),qs('smTrangThai'),qs('smNgayMo'),qs('smHanChot'),qs('smCongKhai'),qs('smSave')].forEach(el=>{ el.disabled = !canEdit; });
+  qs('smOpenQuestions').classList.toggle('hidden', !s);
+  qs('smOpenResults').classList.toggle('hidden', !s);
+  qs('sessionModal').classList.remove('hidden');
+}
+qs('btnNewSession').addEventListener('click', ()=>openSessionModal(null));
+qs('smCancel').addEventListener('click', ()=>qs('sessionModal').classList.add('hidden'));
+qs('smSave').addEventListener('click', ()=>{
+  const s = {
+    session_id: qs('smId').value.trim(),
+    ten_khao_sat: qs('smTen').value.trim(),
+    mo_ta: qs('smMoTa').value.trim(),
+    bo_cau_hoi_id: qs('smBo').value.trim(),
+    trang_thai: qs('smTrangThai').value,
+    ngay_mo: qs('smNgayMo').value,
+    han_chot: qs('smHanChot').value,
+    cong_khai: qs('smCongKhai').checked
+  };
+  if (!s.session_id){ showMsg('Cần nhập mã khảo sát.', false); return; }
+  post({action:'save_session', session:s}).then(res=>{
+    if (res.ok){ showMsg('Đã lưu khảo sát.', true); qs('sessionModal').classList.add('hidden'); loadSessions(); }
+    else showMsg('Lỗi: ' + (res.error||''), false);
+  });
+});
+
+qs('smOpenQuestions').addEventListener('click', ()=>{
+  const boId = qs('smBo').value.trim();
+  if (!boId){ showMsg('Cần nhập bộ câu hỏi trước.', false); return; }
+  openQuestions(boId);
+});
+function openQuestions(boId){
+  currentBoId = boId;
+  qs('qBoId').textContent = boId;
+  api('admin_questions', {bo: boId}).then(res=>{
+    if (!res.ok){ showMsg('Không có quyền xem bộ câu hỏi này.', false); return; }
+    renderQuestions(res.questions||[], res._canEdit);
+    qs('qModal').classList.remove('hidden');
+  });
+}
+function renderQuestions(list, canEdit){
+  const wrap = qs('qList');
+  wrap.innerHTML = '';
+  list.sort((a,b)=>(a.thu_tu||0)-(b.thu_tu||0)).forEach(q=>addQRow(q, canEdit));
+  qs('qAddRow').classList.toggle('hidden', !canEdit);
+  qs('qSave').classList.toggle('hidden', !canEdit);
+}
+function addQRow(q, canEdit){
+  q = q || {};
+  const div = document.createElement('div');
+  div.className = 'qrow';
+  div.innerHTML =
+    '<div class="grid2">' +
+    '<div class="field"><label>Mã biến</label><input type="text" class="q_ma_bien" value="'+(q.ma_bien||'')+'"></div>' +
+    '<div class="field"><label>Thứ tự</label><input type="text" class="q_thu_tu" value="'+(q.thu_tu||'')+'"></div>' +
+    '<div class="field"><label>Phần</label><input type="text" class="q_phan" value="'+(q.phan||'')+'"></div>' +
+    '<div class="field"><label>Nhóm</label><input type="text" class="q_nhom" value="'+(q.nhom||'')+'"></div>' +
+    '</div>' +
+    '<div class="field"><label>Nội dung câu hỏi</label><textarea class="q_noi_dung">'+(q.noi_dung_cau_hoi||'')+'</textarea></div>' +
+    '<div class="grid2">' +
+    '<div class="field"><label>Loại câu hỏi</label><input type="text" class="q_loai" value="'+(q.loai_cau_hoi||'')+'"></div>' +
+    '<div class="field"><label>Lựa chọn (phân cách bởi ;)</label><input type="text" class="q_luachon" value="'+(q.lua_chon||'')+'"></div>' +
+    '</div>' +
+    '<button class="btn-danger btn-sm q_remove">Xoá câu này</button>';
+  if (!canEdit) div.querySelectorAll('input,textarea,button').forEach(el=>el.disabled=true);
+  div.querySelector('.q_remove').addEventListener('click', ()=>div.remove());
+  qs('qList').appendChild(div);
+}
+qs('qAddRow').addEventListener('click', ()=>addQRow(null, true));
+qs('qCancel').addEventListener('click', ()=>qs('qModal').classList.add('hidden'));
+qs('qSave').addEventListener('click', ()=>{
+  const rows = Array.from(qs('qList').children).map((div,i)=>({
+    thu_tu: div.querySelector('.q_thu_tu').value || (i+1),
+    ma_bien: div.querySelector('.q_ma_bien').value,
+    phan: div.querySelector('.q_phan').value,
+    nhom: div.querySelector('.q_nhom').value,
+    noi_dung_cau_hoi: div.querySelector('.q_noi_dung').value,
+    loai_cau_hoi: div.querySelector('.q_loai').value,
+    lua_chon: div.querySelector('.q_luachon').value
+  }));
+  post({action:'save_questions', boCauHoiId: currentBoId, questions: rows}).then(res=>{
+    if (res.ok){ showMsg('Đã lưu bộ câu hỏi.', true); qs('qModal').classList.add('hidden'); }
+    else showMsg('Lỗi: ' + (res.error||''), false);
+  });
+});
+
+qs('smOpenResults').addEventListener('click', ()=>{
+  if (!currentSessionId) return;
+  api('admin_results', {ks: currentSessionId}).then(res=>{
+    if (!res.ok){ showMsg('Không có quyền xem kết quả.', false); return; }
+    qs('rTitle').textContent = currentSessionId;
+    const thead = qs('rTable').querySelector('thead');
+    const tbody = qs('rTable').querySelector('tbody');
+    thead.innerHTML = '<tr>' + (res.headers||[]).map(h=>'<th>'+h+'</th>').join('') + '</tr>';
+    tbody.innerHTML = (res.rows||[]).map(r=>'<tr>'+r.map(c=>'<td>'+(c==null?'':c)+'</td>').join('')+'</tr>').join('') || '<tr><td class="muted">Chưa có phản hồi nào.</td></tr>';
+    qs('rModal').classList.remove('hidden');
+  });
+});
+qs('rCancel').addEventListener('click', ()=>qs('rModal').classList.add('hidden'));
+
+function loadAccessRequests(){
+  api('admin_access_requests').then(res=>{
+    const body = qs('accessBody');
+    if (!res.ok){ body.innerHTML = '<tr><td colspan="5" class="muted">Lỗi tải.</td></tr>'; return; }
+    const list = res.requests || [];
+    if (!list.length){ body.innerHTML = '<tr><td colspan="5" class="muted">Chưa có yêu cầu nào.</td></tr>'; return; }
+    body.innerHTML = list.map(r=>{
+      const badgeClass = r.trang_thai==='da_duyet'?'badge-approved':(r.trang_thai==='tu_choi'?'badge-rejected':'badge-pending');
+      const canActOwner = r.ncs_so_huu === MY_CODE && !r.ncs_duyet && r.trang_thai==='cho_duyet';
+      const canActAdmin = ME && ME.role==='admin' && !r.admin_duyet && r.trang_thai==='cho_duyet';
+      let actions = '';
+      if (canActOwner || canActAdmin){
+        actions = '<button class="btn-primary btn-sm" data-approve="'+r.request_id+'">Duyệt</button> ' +
+                   '<button class="btn-danger btn-sm" data-reject="'+r.request_id+'">Từ chối</button>';
+      }
+      return '<tr><td>'+r.ncs_yeu_cau+'</td><td>'+r.ncs_so_huu+'</td><td>'+(r.ly_do||'')+'</td>' +
+        '<td><span class="badge '+badgeClass+'">'+r.trang_thai+'</span></td><td>'+actions+'</td></tr>';
+    }).join('');
+    body.querySelectorAll('[data-approve]').forEach(b=>b.addEventListener('click', ()=>{
+      post({action:'approve_access', request_id: b.dataset.approve}).then(res=>{
+        if (res.ok){ showMsg('Đã duyệt.', true); loadAccessRequests(); loadSessions(); }
+        else showMsg('Lỗi: '+(res.error||''), false);
+      });
+    }));
+    body.querySelectorAll('[data-reject]').forEach(b=>b.addEventListener('click', ()=>{
+      post({action:'reject_access', request_id: b.dataset.reject}).then(res=>{
+        if (res.ok){ showMsg('Đã từ chối.', true); loadAccessRequests(); }
+        else showMsg('Lỗi: '+(res.error||''), false);
+      });
+    }));
+  });
+}
+qs('btnSendRequest').addEventListener('click', ()=>{
+  const owner = qs('reqOwnerCode').value.trim();
+  if (!owner){ showMsg('Cần nhập mã NCS sở hữu.', false); return; }
+  post({action:'request_access', ncs_so_huu: owner, ly_do: qs('reqReason').value.trim()}).then(res=>{
+    if (res.ok){ showMsg('Đã gửi yêu cầu, chờ duyệt.', true); qs('reqOwnerCode').value=''; qs('reqReason').value=''; loadAccessRequests(); }
+    else showMsg('Lỗi: '+(res.error||''), false);
+  });
+});
+
+function loadAccounts(){
+  api('admin_accounts').then(res=>{
+    const body = qs('accountsBody');
+    if (!res.ok){ body.innerHTML = '<tr><td colspan="6" class="muted">Không có quyền.</td></tr>'; return; }
+    body.innerHTML = (res.accounts||[]).map(a=>{
+      const isLocked = a.trang_thai === 'khoa';
+      return '<tr><td>'+a.account_id+'</td><td>'+a.ten_hien_thi+'</td><td>'+a.role+'</td><td>'+(a.ngon_ngu_ho_tro||'—')+'</td>' +
+        '<td>'+a.trang_thai+'</td><td><button class="btn-ghost btn-sm" data-toggle="'+a.account_id+'" data-status="'+(isLocked?'active':'khoa')+'">'+(isLocked?'Mở khoá':'Khoá')+'</button></td></tr>';
+    }).join('');
+    body.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click', ()=>{
+      post({action:'set_account_status', account_id:b.dataset.toggle, trang_thai:b.dataset.status}).then(res=>{
+        if (res.ok){ showMsg('Đã cập nhật.', true); loadAccounts(); } else showMsg('Lỗi: '+(res.error||''), false);
+      });
+    }));
+  });
+}
+qs('btnCreateAccount').addEventListener('click', ()=>{
+  const account = {
+    account_id: qs('accId').value.trim(),
+    ten_hien_thi: qs('accName').value.trim(),
+    role: qs('accRole').value,
+    ngon_ngu_ho_tro: qs('accLang').value
+  };
+  if (!account.account_id || !account.ten_hien_thi){ showMsg('Cần nhập mã và tên.', false); return; }
+  post({action:'create_account', account: account}).then(res=>{
+    if (res.ok){ showMsg('Đã tạo tài khoản.', true); qs('accId').value=''; qs('accName').value=''; loadAccounts(); }
+    else showMsg('Lỗi: '+(res.error||''), false);
+  });
+});
+
+if (MY_CODE) doLogin(MY_CODE);
+</script>
+</body>
+</html>
+
